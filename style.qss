@@ -1,0 +1,49 @@
+QWidget {
+    background-color: #f4f6f8;
+    font-family: "Segoe UI", sans-serif;
+    font-size: 13px;
+}
+
+QLabel {
+    color: #333333;
+}
+
+QLabel#statusLabel {
+    font-weight: bold;
+    color: #2d89ef;
+    padding: 4px 0;
+}
+
+QLineEdit {
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 6px;
+    background-color: white;
+}
+
+QLineEdit:focus {
+    border: 1px solid #2d89ef;
+}
+
+QPushButton#submitBtn {
+    background-color: #2d89ef;
+    color: white;
+    border-radius: 6px;
+    padding: 8px;
+    font-weight: bold;
+}
+
+QPushButton#submitBtn:hover {
+    background-color: #1b5fbd;
+}
+
+QPushButton#submitBtn:disabled {
+    background-color: #a0a0a0;
+}
+
+QTextEdit#resultBox {
+    background-color: white;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 6px;
+}
