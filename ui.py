@@ -12,7 +12,7 @@ class RouteApp(QWidget):
         super().__init__()
         self.setWindowTitle("Route Finder")
         self.setWindowIcon(QIcon("icon.png"))
-        self.setFixedSize(420, 740)
+        self.setFixedSize(420, 650)
         self.use_km = True
         self.current_route = None
         self.current_step = 0
@@ -45,10 +45,12 @@ class RouteApp(QWidget):
         self.result_box = QTextEdit()
         self.result_box.setObjectName("resultBox")
         self.result_box.setReadOnly(True)
+        self.result_box.setFixedHeight(160)
 
         self.step_box = QTextEdit()
         self.step_box.setObjectName("stepBox")
         self.step_box.setReadOnly(True)
+        self.step_box.setFixedHeight(220)
 
         self.previous_btn = QPushButton("Previous Step")
         self.previous_btn.setObjectName("previousBtn")
