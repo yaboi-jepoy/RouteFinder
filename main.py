@@ -3,6 +3,7 @@ import json
 import requests
 from dotenv import load_dotenv
 
+#Load configurations
 load_dotenv()
 
 # NOTE: no hardcoded fallback key here on purpose — if MAPQUEST_API_KEY
