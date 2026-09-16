@@ -99,6 +99,11 @@ class RouteApp(QWidget):
             return
 
         summary_info = self.current_route.get("summary", {})
+        query = self.current_route.get("query", {})
+        origin = self.current_route.get("origin", {})
+        destination = self.current_route.get("destination", {})
+        warnings = summary_info.get("route_warnings", {})
+        steps = self.current_route.get("steps", [])
 
         if self.use_km:
             distance = summary_info.get("distance_km")
@@ -108,12 +113,16 @@ class RouteApp(QWidget):
             unit = "miles"
 
         time_sec = summary_info.get("time_seconds")
-        summary = f"Distance: {distance} {unit}\n"
-
-        if time_sec is not None:
-            hours = time_sec // 3600
-            minutes = (time_sec % 3600) // 60
-            summary += f"Estimated time: {int(hours)}h {int(minutes)}m\n"
+        summary = (
+            f"From: {query.get('origin')}\n"
+            f"To: {query.get('destination')}\n"
+            f"Distance: {distance} {unit}\n"
+            f"Estimated time: {int(time_sec // 3600)}h "
+            f"{int((time_sec % 3600) // 60)}m\n"
+            f"Navigation steps: {len(steps)}\n"
+            f"Toll road: {'Yes' if warnings.get('toll_road') else 'No'}\n"
+            f"Highway: {'Yes' if warnings.get('highway') else 'No'}\n"
+        )
 
         self.result_box.setPlainText(summary)
 
