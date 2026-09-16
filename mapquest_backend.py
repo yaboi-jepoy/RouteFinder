@@ -1,16 +1,10 @@
 import os
 import json
 import requests
-from dotenv import load_dotenv
 
-#Load configurations
-load_dotenv()
 
-# NOTE: no hardcoded fallback key here on purpose — if MAPQUEST_API_KEY
-# isn't set, fail loudly rather than silently using a key that might be
-# stale, shared, or (as in the version pasted into chat) already exposed.
-API_KEY = os.getenv("MAPQUEST_API_KEY") or os.getenv("API_KEY")
-BASE_URL = "https://www.mapquestapi.com/directions/v2/route"
+API_KEY = os.environ.get("MAPQUEST_API_KEY", "EGVIJZBu6OlzjazQolRueK1VFVfoi30D")
+BASE_URL = "http://www.mapquestapi.com/directions/v2/route"
 OUTPUT_FILE = "route_output.json"
 
 
@@ -58,10 +52,6 @@ def build_steps(route):
 def fetch_route(origin, destination, unit="m"):
     """Call the MapQuest Directions API and return the raw JSON response.
     unit: 'm' for miles, 'k' for kilometers (MapQuest's own unit switch)."""
-    if not API_KEY:
-        raise RuntimeError(
-            "No MapQuest API key found. Set MAPQUEST_API_KEY in your .env file."
-        )
     params = {
         "key": API_KEY,
         "from": origin,
@@ -77,28 +67,23 @@ def simplify_route(raw_data, origin, destination):
     """Transform MapQuest's raw JSON response into the simplified
     structure the frontend will actually read."""
     info = raw_data.get("info", {})
-    status_code = info.get("statuscode")
-
-    if status_code != 0:
+    if info.get("statuscode") != 0:
         messages = info.get("messages") or ["Unknown error from MapQuest."]
         return {
             "status": "error",
-            "status_code": status_code,
             "message": "; ".join(messages),
         }
 
-    route = raw_data.get("route", {})
+    route = raw_data["route"]
     locations = route.get("locations", [])
     origin_loc = location_summary(locations[0]) if locations else {}
-    destination_loc = location_summary(
-        locations[-1]) if len(locations) > 1 else {}
+    destination_loc = location_summary(locations[-1]) if len(locations) > 1 else {}
 
     distance_mi = route.get("distance", 0)
     bbox = route.get("boundingBox", {})
 
     return {
         "status": "success",
-        "status_code": 0,
         "query": {
             "origin": origin,
             "destination": destination,
@@ -129,76 +114,6 @@ def simplify_route(raw_data, origin, destination):
     }
 
 
-def summarize_route(simplified):
-    """Turn a simplified route dict into a short, human-readable summary
-    paragraph — used by the GUI's 'Summarize' button."""
-    if simplified.get("status") != "success":
-        return simplified.get("message", "No route available to summarize.")
-
-    s = simplified["summary"]
-    steps = simplified.get("steps", [])
-    q = simplified["query"]
-
-    lines = []
-    lines.append(f"{q['origin']} to {q['destination']}")
-    lines.append(
-        f"{s['distance_miles']} mi ({s['distance_km']} km), "
-        f"about {s['time_formatted']}."
-    )
-
-    # Pull out the major named roads (skip short/unnamed maneuvers like
-    # "Turn left" with no street, dedupe consecutive repeats)
-    major_roads = []
-    for step in steps:
-        street = step.get("street")
-        if street and (not major_roads or major_roads[-1] != street):
-            major_roads.append(street)
-
-    if major_roads:
-        shown = major_roads[:6]
-        road_list = ", ".join(shown)
-        if len(major_roads) > 6:
-            road_list += f", and {len(major_roads) - 6} more"
-        lines.append(f"Main roads: {road_list}.")
-
-    warnings = s.get("route_warnings", {})
-    flagged = [name.replace("_", " ") for name, val in warnings.items() if val]
-    if flagged:
-        lines.append("Heads up: route includes " + ", ".join(flagged) + ".")
-
-    lines.append(f"{len(steps)} turn-by-turn steps total.")
-
-    return "\n".join(lines)
-
-
-def get_route(orig, dest):
-    """Kept for backward compatibility with the existing GUI call site.
-    Now returns the simplified structure (with 'steps', 'summary', etc.)
-    instead of the raw MapQuest payload."""
-    try:
-        raw_data = fetch_route(orig, dest)
-    except requests.exceptions.Timeout:
-        return {"status": 598, "message": "Request to MapQuest timed out."}
-    except requests.exceptions.RequestException as e:
-        return {"status": 599, "message": f"Network error: {e}"}
-
-    simplified = simplify_route(raw_data, orig, dest)
-
-    if simplified["status"] == "success":
-        return {"status": 0, "data": simplified}
-
-    status_code = simplified.get("status_code")
-    if status_code == 402:
-        return {"status": 402, "message": "Invalid user inputs for one or both locations"}
-    elif status_code == 611:
-        return {"status": 611, "message": "Missing an entry for one or both locations"}
-    else:
-        return {
-            "status": status_code if status_code is not None else -1,
-            "message": simplified.get("message", "Unknown MapQuest API error"),
-        }
-
-
 def save_json(data, filepath=OUTPUT_FILE):
     with open(filepath, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=2)
@@ -210,14 +125,19 @@ def main():
     destination = input("Enter destination address: ").strip()
 
     print("Fetching route from MapQuest...")
-    result = get_route(origin, destination)
+    raw_data = fetch_route(origin, destination)
 
-    if result["status"] == 0:
-        simplified = result["data"]
-        save_json(simplified)
-        print("\n" + summarize_route(simplified))
+    simplified = simplify_route(raw_data, origin, destination)
+    save_json(simplified)
+
+    if simplified["status"] == "success":
+        s = simplified["summary"]
+        print(f"\n{origin} -> {destination}")
+        print(f"Distance: {s['distance_miles']} mi ({s['distance_km']} km)")
+        print(f"Time: {s['time_formatted']}")
+        print(f"Steps: {len(simplified['steps'])}")
     else:
-        print(f"Error: {result.get('message')}")
+        print(f"Error: {simplified['message']}")
 
 
 if __name__ == "__main__":
