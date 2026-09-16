@@ -75,9 +75,9 @@ class RouteApp(QWidget):
 
         if status == 0:
             self.status_label.setText("Route found!")
-            route_info = result["data"].get("route", {})
-            distance = route_info.get("distance")
-            time_sec = route_info.get("time")
+            summary_info = result["data"].get("summary", {})
+            distance = summary_info.get("distance_miles")
+            time_sec = summary_info.get("time_seconds")
             summary = f"Distance: {distance} miles\n"
             if time_sec is not None:
                 hours = time_sec // 3600
