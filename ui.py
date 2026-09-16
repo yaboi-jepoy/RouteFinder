@@ -13,6 +13,8 @@ class RouteApp(QWidget):
         self.setWindowTitle("Route Finder")
         self.setWindowIcon(QIcon("icon.png"))
         self.setFixedSize(420, 380)
+        self.use_km = True
+        self.current_route = None
         self.init_ui()
 
     def init_ui(self):
@@ -28,6 +30,11 @@ class RouteApp(QWidget):
         self.submit_btn = QPushButton("Get Route")
         self.submit_btn.setObjectName("submitBtn")
         self.submit_btn.clicked.connect(self.on_submit)
+        
+        # km toggle button
+        self.unit_toggle = QPushButton("Show km")
+        self.unit_toggle.setCheckable(True)
+        self.unit_toggle.toggled.connect(self.on_unit_toggled)
 
         self.status_label = QLabel("")
         self.status_label.setObjectName("statusLabel")
@@ -44,9 +51,9 @@ class RouteApp(QWidget):
         main_layout = QVBoxLayout()
         main_layout.addLayout(form_layout)
         main_layout.addWidget(self.submit_btn)
+        main_layout.addWidget(self.unit_toggle)
         main_layout.addWidget(self.status_label)
         main_layout.addWidget(self.result_box)
-
         self.setLayout(main_layout)
 
     def on_submit(self):
@@ -75,20 +82,40 @@ class RouteApp(QWidget):
 
         if status == 0:
             self.status_label.setText("Route found!")
-            summary_info = result["data"].get("summary", {})
-            distance = summary_info.get("distance_miles")
-            time_sec = summary_info.get("time_seconds")
-            summary = f"Distance: {distance} miles\n"
-            if time_sec is not None:
-                hours = time_sec // 3600
-                minutes = (time_sec % 3600) // 60
-                summary += f"Estimated time: {int(hours)}h {int(minutes)}m\n"
-            self.result_box.setPlainText(summary)
-        else:
-            self.status_label.setText(f"Error ({status})")
-            self.result_box.setPlainText(result.get("message", "Unknown error"))
+            self.current_route = result["data"]
+            self.display_route_summary()
 
         self.submit_btn.setEnabled(True)
+
+
+    def on_unit_toggled(self, checked):
+        self.use_km = checked
+        self.unit_toggle.setText("Show km" if checked else "Show miles")
+        self.display_route_summary()
+
+
+    def display_route_summary(self):
+        if not self.current_route:
+            return
+
+        summary_info = self.current_route.get("summary", {})
+
+        if self.use_km:
+            distance = summary_info.get("distance_km")
+            unit = "km"
+        else:
+            distance = summary_info.get("distance_miles")
+            unit = "miles"
+
+        time_sec = summary_info.get("time_seconds")
+        summary = f"Distance: {distance} {unit}\n"
+
+        if time_sec is not None:
+            hours = time_sec // 3600
+            minutes = (time_sec % 3600) // 60
+            summary += f"Estimated time: {int(hours)}h {int(minutes)}m\n"
+
+        self.result_box.setPlainText(summary)
 
 
 if __name__ == "__main__":
