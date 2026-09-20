@@ -2,7 +2,7 @@ import sys
 from main import get_route
 from PyQt6.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QFormLayout,
-    QLineEdit, QPushButton, QLabel, QTextEdit
+    QLineEdit, QPushButton, QLabel, QTextEdit, QHBoxLayout
 )
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QIcon
@@ -59,6 +59,7 @@ class RouteApp(QWidget):
         self.next_btn = QPushButton("Next Step")
         self.next_btn.setObjectName("nextBtn")
         self.next_btn.clicked.connect(self.show_next_step)
+        self.unit_toggle.setChecked(self.use_km)
 
         # --- Layout ---
         form_layout = QFormLayout()
@@ -67,8 +68,10 @@ class RouteApp(QWidget):
 
         main_layout = QVBoxLayout()
         main_layout.addLayout(form_layout)
-        main_layout.addWidget(self.submit_btn)
-        main_layout.addWidget(self.unit_toggle)
+        route_actions = QHBoxLayout()
+        route_actions.addWidget(self.submit_btn)
+        route_actions.addWidget(self.unit_toggle)
+        main_layout.addLayout(route_actions)
         main_layout.addWidget(self.status_label)
         main_layout.addWidget(self.result_box)
         main_layout.addWidget(self.step_box)
@@ -114,6 +117,7 @@ class RouteApp(QWidget):
         self.use_km = checked
         self.unit_toggle.setText("Show km" if checked else "Show miles")
         self.display_route_summary()
+        self.display_current_step()
 
 
     def display_route_summary(self):
