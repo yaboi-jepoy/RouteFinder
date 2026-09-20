@@ -1,11 +1,11 @@
 import sys
-from main import get_route
+from main import get_route, summarize_route
 from PyQt6.QtWidgets import (
     QApplication, QWidget, QVBoxLayout, QFormLayout,
-    QLineEdit, QPushButton, QLabel, QTextEdit
+    QLineEdit, QPushButton, QLabel, QTextEdit, QDialog
 )
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QIcon
+from PyQt6.QtGui import QIcon, QFont
 
 class RouteApp(QWidget):
     def __init__(self):
@@ -33,11 +33,17 @@ class RouteApp(QWidget):
         self.submit_btn = QPushButton("Get Route")
         self.submit_btn.setObjectName("submitBtn")
         self.submit_btn.clicked.connect(self.on_submit)
-        
-        # km toggle button
-        self.unit_toggle = QPushButton("Show km")
-        self.unit_toggle.setCheckable(True)
-        self.unit_toggle.toggled.connect(self.on_unit_toggled)
+
+        # Separate button: switches the displayed distance unit (km <-> miles)
+        self.metrics_btn = QPushButton("Show miles")
+        self.metrics_btn.setObjectName("metricsBtn")
+        self.metrics_btn.clicked.connect(self.on_change_metrics)
+
+        # Separate button: opens the text-report summary in its own dialog
+        self.summarize_btn = QPushButton("Summarize")
+        self.summarize_btn.setObjectName("summarizeBtn")
+        self.summarize_btn.clicked.connect(self.on_summarize)
+        self.summarize_btn.setEnabled(False)
 
         self.status_label = QLabel("")
         self.status_label.setObjectName("statusLabel")
@@ -68,7 +74,8 @@ class RouteApp(QWidget):
         main_layout = QVBoxLayout()
         main_layout.addLayout(form_layout)
         main_layout.addWidget(self.submit_btn)
-        main_layout.addWidget(self.unit_toggle)
+        main_layout.addWidget(self.metrics_btn)
+        main_layout.addWidget(self.summarize_btn)
         main_layout.addWidget(self.status_label)
         main_layout.addWidget(self.result_box)
         main_layout.addWidget(self.step_box)
@@ -104,17 +111,43 @@ class RouteApp(QWidget):
             self.status_label.setText("Route found!")
             self.current_route = result["data"]
             self.current_step_index = 0
+            self.summarize_btn.setEnabled(True)
             self.display_route_summary()
             self.display_current_step()
+        else:
+            self.status_label.setText(result.get("message", "Something went wrong."))
+            self.current_route = None
+            self.summarize_btn.setEnabled(False)
 
         self.submit_btn.setEnabled(True)
 
-
-    def on_unit_toggled(self, checked):
-        self.use_km = checked
-        self.unit_toggle.setText("Show km" if checked else "Show miles")
+    def on_change_metrics(self):
+        """Toggle between km and miles for the currently displayed route."""
+        self.use_km = not self.use_km
+        self.metrics_btn.setText("Show miles" if self.use_km else "Show km")
         self.display_route_summary()
+        self.display_current_step()
 
+    def on_summarize(self):
+        """Build the text report via main.summarize_route() and show it in a dialog."""
+        if not self.current_route:
+            return
+
+        report_text = summarize_route(self.current_route)
+
+        dialog = QDialog(self)
+        dialog.setWindowTitle("Trip Summary Report")
+        dialog.setFixedSize(380, 420)
+
+        report_box = QTextEdit(dialog)
+        report_box.setReadOnly(True)
+        report_box.setPlainText(report_text)
+        report_box.setFont(QFont("Consolas", 10))
+
+        layout = QVBoxLayout(dialog)
+        layout.addWidget(report_box)
+        dialog.setLayout(layout)
+        dialog.exec()
 
     def display_route_summary(self):
         if not self.current_route:

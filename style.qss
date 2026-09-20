@@ -41,6 +41,34 @@ QPushButton#submitBtn:disabled {
     background-color: #a0a0a0;
 }
 
+QPushButton#metricsBtn {
+    background-color: white;
+    color: #2d89ef;
+    border: 1px solid #2d89ef;
+    border-radius: 6px;
+    padding: 6px;
+}
+
+QPushButton#metricsBtn:hover {
+    background-color: #eaf2fd;
+}
+
+QPushButton#summarizeBtn {
+    background-color: #34a853;
+    color: white;
+    border-radius: 6px;
+    padding: 6px;
+    font-weight: bold;
+}
+
+QPushButton#summarizeBtn:hover {
+    background-color: #278a3f;
+}
+
+QPushButton#summarizeBtn:disabled {
+    background-color: #a0a0a0;
+}
+
 QTextEdit#resultBox {
     background-color: white;
     border: 1px solid #ccc;
