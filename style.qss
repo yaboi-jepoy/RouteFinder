@@ -1,12 +1,11 @@
 QWidget {
-    background-color: palette(window);
-    color: palette(window-text);
+    background-color: #f4f6f8;
     font-family: "Segoe UI", sans-serif;
     font-size: 13px;
 }
 
 QLabel {
-    color: palette(window-text);
+    color: #333333;
 }
 
 QLabel#statusLabel {
@@ -16,11 +15,10 @@ QLabel#statusLabel {
 }
 
 QLineEdit {
-    border: 1px solid palette(mid);
+    border: 1px solid #ccc;
     border-radius: 4px;
     padding: 6px;
-    background-color: palette(base);
-    color: palette(text);
+    background-color: white;
 }
 
 QLineEdit:focus {
@@ -40,33 +38,12 @@ QPushButton#submitBtn:hover {
 }
 
 QPushButton#submitBtn:disabled {
-    background-color: palette(mid);
-    color: palette(window-text);
-}
-
-QPushButton#summarizeBtn {
-    background-color: palette(base);
-    color: #2d89ef;
-    border: 1px solid #2d89ef;
-    border-radius: 6px;
-    padding: 8px;
-    font-weight: bold;
-}
-
-QPushButton#summarizeBtn:hover {
-    background-color: #eaf2fc;
-}
-
-QPushButton#summarizeBtn:disabled {
-    background-color: palette(mid);
-    color: palette(window-text);
-    border: 1px solid palette(mid);
+    background-color: #a0a0a0;
 }
 
 QTextEdit#resultBox {
-    background-color: palette(base);
-    color: palette(text);
-    border: 1px solid palette(mid);
+    background-color: white;
+    border: 1px solid #ccc;
     border-radius: 4px;
     padding: 6px;
 }
